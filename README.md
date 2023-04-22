@@ -19,10 +19,10 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 
 #### Scanlines
 ![scanlines](https://user-images.githubusercontent.com/6412699/233806373-d1eb7ba1-576f-498f-a54e-336f1a3f8ae8.png)
-![240p test suite - 2](https://user-images.githubusercontent.com/6412699/233806426-fefaf11f-6fd5-49e0-89ce-3eabeccf49a5.PNG)
+![240p test suite - 2](https://user-images.githubusercontent.com/6412699/233807008-cbbd909a-49a7-45f0-b064-e87ed55ed568.PNG)
 
 ## Results
-![240p test suite - 1](https://user-images.githubusercontent.com/6412699/233806534-15d567fc-83ea-4fa3-a20d-0aaf38744695.PNG)
+![240p test suite - 1](https://user-images.githubusercontent.com/6412699/233807021-fab24872-67f6-4b24-9cf6-d35d663cd763.PNG)
 ![starfox - 1](https://user-images.githubusercontent.com/6412699/233806540-dd52e1aa-f5b7-4e33-a53f-920c28066a50.PNG)
 ![SOM-gizmo-crt-rgb_2](https://user-images.githubusercontent.com/6412699/233806608-a91368a9-d3c7-4aed-97c4-b3de61adf24d.PNG)
 
