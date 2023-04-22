@@ -28,3 +28,7 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 
 ### CRT-Royal comparison
 ![p240 test suite CRT royale](https://user-images.githubusercontent.com/6412699/233806625-ab8b4658-3db6-4cae-9e4b-d8c8e5b879b8.PNG)
+
+### Nearest neighbor vs shader comparison
+![p240 comparison org](https://user-images.githubusercontent.com/6412699/233807532-4b3cbd58-88ff-4c43-8e70-790feafbb599.PNG)
+![p240 comparison](https://user-images.githubusercontent.com/6412699/233807474-1f8e1856-7d4e-413f-ab2d-c6bd7cd8568a.PNG)
