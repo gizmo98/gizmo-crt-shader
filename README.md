@@ -26,8 +26,16 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 ![starfox - 1](https://user-images.githubusercontent.com/6412699/233806540-dd52e1aa-f5b7-4e33-a53f-920c28066a50.PNG)
 ![SOM-gizmo-crt-rgb_2](https://user-images.githubusercontent.com/6412699/233806608-a91368a9-d3c7-4aed-97c4-b3de61adf24d.PNG)
 
-### CRT-Royal comparison
+### Comparison
+#### gizmo-crt
+![240p test suite - crt-rgb](https://user-images.githubusercontent.com/6412699/233823225-5acce213-cd8e-4808-874a-931cd3fbe746.PNG)
+
+#### CRT-Royal 
 ![p240 test suite CRT royale](https://user-images.githubusercontent.com/6412699/233806625-ab8b4658-3db6-4cae-9e4b-d8c8e5b879b8.PNG)
+
+#### CRT-PI
+![p240 CRT-PI](https://user-images.githubusercontent.com/6412699/233823215-440c5763-34ac-4054-8733-c63dffc43747.PNG)
+
 
 ### Nearest neighbor vs shader comparison
 ![p240 comparison org](https://user-images.githubusercontent.com/6412699/233807532-4b3cbd58-88ff-4c43-8e70-790feafbb599.PNG)
