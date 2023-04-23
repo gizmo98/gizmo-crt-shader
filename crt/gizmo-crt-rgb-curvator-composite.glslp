@@ -1,0 +1,3 @@
+shaders = "1"
+shader0 = "shaders/gizmo-crt-rgb-curvator-composite.glsl"
+filter_linear0 = "false"
