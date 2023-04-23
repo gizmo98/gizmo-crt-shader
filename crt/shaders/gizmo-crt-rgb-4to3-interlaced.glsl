@@ -106,7 +106,7 @@ float GetFuv(in vec2 uv){
 }
 
 vec2 GetIuv(in vec2 uv){
-    uv = uv*TextureSize.xy + 0.5;
+    uv = uv*TextureSize.xy;
 
     COMPAT_PRECISION vec2 iuv = floor(uv);
     return iuv;
