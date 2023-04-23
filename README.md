@@ -21,10 +21,27 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 ![scanlines](https://user-images.githubusercontent.com/6412699/233806373-d1eb7ba1-576f-498f-a54e-336f1a3f8ae8.png)
 ![240p test suite - 2](https://user-images.githubusercontent.com/6412699/233807008-cbbd909a-49a7-45f0-b064-e87ed55ed568.PNG)
 
+## Variants
+# gizmo-crt-rgb.glslp
+Default variant.
+
+# gizmo-crt-rgb-interlaced.glslp
+This variant tries to emulate interlaced rendering. Odd and even lines will be dimmed from frame to frame.
+
+# gizmo-crt-rgb-curvator.glslp
+Default variant with curvator.
+
+# gizmo-crt-rgb-curvator-composite.glslp
+Default variant with horizontal blur. Best used with systems with bad signal quality like Sega Megadrive.
+
+# gizmo-crt-rgb-curvator-interlaced.glslp
+Interlacing shader with curvator. 
+
 ## Results
 ![240p test suite - 1](https://user-images.githubusercontent.com/6412699/233807021-fab24872-67f6-4b24-9cf6-d35d663cd763.PNG)
 ![starfox - 1](https://user-images.githubusercontent.com/6412699/233806540-dd52e1aa-f5b7-4e33-a53f-920c28066a50.PNG)
 ![SOM-gizmo-crt-rgb_2](https://user-images.githubusercontent.com/6412699/233806608-a91368a9-d3c7-4aed-97c4-b3de61adf24d.PNG)
+![sonic (1)](https://user-images.githubusercontent.com/6412699/233858142-a483ffe8-7023-40c2-8f8f-f33daf4e2e8f.png)
 
 ### Comparison
 #### gizmo-crt
