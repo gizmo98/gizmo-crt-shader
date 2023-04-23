@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/gizmo-crt-rgb-4to3-interlaced.glsl
+filter_linear0 = false
