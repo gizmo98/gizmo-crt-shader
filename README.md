@@ -32,7 +32,7 @@ This variant tries to emulate interlaced rendering. Odd and even lines will be d
 Default variant with curvator.
 
 # gizmo-crt-rgb-curvator-composite.glslp
-Default variant with horizontal blur. Best used with systems with bad signal quality like Sega Megadrive.
+Default variant with curvator and horizontal blur. Best used with systems with bad signal quality like Sega Megadrive.
 
 # gizmo-crt-rgb-curvator-interlaced.glslp
 Interlacing shader with curvator. 
