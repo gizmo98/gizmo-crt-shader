@@ -28,7 +28,7 @@
  * uses gold noise shader https://www.shadertoy.com/view/ltB3zD
  */
 
-#define CURVATE 
+//#define CURVATE 
 //#define INTERLACE
 //#define HORIZONTAL_BLUR
 #if defined HORIZONTAL_BLUR

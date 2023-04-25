@@ -34,20 +34,8 @@ Default v0.1 variant with horizontal blur for megadrive.
 # gizmo-crt-ntsc.glslp
 Default v0.1 variant with NTSC effect.
 
-# gizmo-crt-rgb.glslp
-Default variant.
-
-# gizmo-crt-rgb-interlaced.glslp
-This variant tries to emulate interlaced rendering. Odd and even lines will be dimmed from frame to frame.
-
-# gizmo-crt-rgb-curvator.glslp
-Default variant with curvator.
-
-# gizmo-crt-rgb-curvator-composite.glslp
-Default variant with curvator and horizontal blur. Best used with systems with bad signal quality like Sega Megadrive.
-
-# gizmo-crt-rgb-curvator-interlaced.glslp
-Interlacing shader with curvator. 
+# gizmo-crt-megadrive.glslp
+Default v0.1 variant with horizontal blur and NTSC effect for megadrive.
 
 ## Results
 ![240p test suite - 1](https://user-images.githubusercontent.com/6412699/233807021-fab24872-67f6-4b24-9cf6-d35d663cd763.PNG)
