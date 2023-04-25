@@ -35,7 +35,7 @@
 //#define VERTICAL_BLUR
 #endif
 //define BGR_LCD_PATTERN
-//#define NTSC
+#define NTSC
 
 #define BRIGHTNESS 0.5
 #define BARREL_DISTORTION 0.12

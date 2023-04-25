@@ -30,9 +30,9 @@
 
 #define CURVATE 
 //#define INTERLACE
-//#define HORIZONTAL_BLUR
+#define HORIZONTAL_BLUR
 #if defined HORIZONTAL_BLUR
-//#define VERTICAL_BLUR
+#define VERTICAL_BLUR
 #endif
 //define BGR_LCD_PATTERN
 //#define NTSC
