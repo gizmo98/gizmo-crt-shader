@@ -22,6 +22,18 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 ![240p test suite - 2](https://user-images.githubusercontent.com/6412699/233807008-cbbd909a-49a7-45f0-b064-e87ed55ed568.PNG)
 
 ## Variants
+# gizmo-crt.glslp
+Default v0.1 variant.
+
+# gizmo-crt-n64.glslp
+Default v0.1 variant with vertical and horizontal blur for n64.
+
+# gizmo-crt-megadrive.glslp
+Default v0.1 variant with horizontal blur for megadrive.
+
+# gizmo-crt-ntsc.glslp
+Default v0.1 variant with NTSC effect.
+
 # gizmo-crt-rgb.glslp
 Default variant.
 
@@ -42,6 +54,7 @@ Interlacing shader with curvator.
 ![starfox - 1](https://user-images.githubusercontent.com/6412699/233806540-dd52e1aa-f5b7-4e33-a53f-920c28066a50.PNG)
 ![SOM-gizmo-crt-rgb_2](https://user-images.githubusercontent.com/6412699/233806608-a91368a9-d3c7-4aed-97c4-b3de61adf24d.PNG)
 ![sonic (1)](https://user-images.githubusercontent.com/6412699/233858142-a483ffe8-7023-40c2-8f8f-f33daf4e2e8f.png)
+![M64-native_res_factor_1-3](https://user-images.githubusercontent.com/6412699/234248661-86006643-8d1f-4694-b9c4-1b3780f9afba.PNG)
 
 ### Comparison
 #### gizmo-crt
