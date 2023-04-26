@@ -201,7 +201,7 @@ vec4 Interlace(in vec4 col, in vec2 coord){
 vec3 XCoords(in float coord, in float y, in float factor){
 #ifdef NTSC
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    COMPAT_PRECISION float ntsc_factor = 0.15 * sin(iGlobalTime * 100.0);
+    COMPAT_PRECISION float ntsc_factor = 0.50 * sin(iGlobalTime * 100.0);
 #else
     COMPAT_PRECISION float ntsc_factor = 0.0;
 #endif 
