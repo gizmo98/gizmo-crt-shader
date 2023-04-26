@@ -7,8 +7,8 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
- * version 0.1
- * 24.04.2023
+ * version 0.2
+ * 26.04.2023
  * https://github.com/gizmo98/gizmo-crt-shader
  *
  * This shader tries to mimic a CRT without extensive use of scanlines and rgb pattern emulation.
@@ -131,21 +131,21 @@ vec4 textureVertical(in vec2 uv){
     COMPAT_PRECISION vec2 iuv = floor(uv);
     COMPAT_PRECISION vec2 fuv = uv - iuv;    
 #ifdef HORIZONTAL_BLUR
-    vec2 uv1 = vec2(iuv.x - 0.5 , uv.y - 0.5) / TextureSize.xy;
-    vec2 uv2 = vec2(iuv.x + 0.5 , uv.y - 0.5) / TextureSize.xy;
+    vec2 uv1 = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
+    vec2 uv2 = vec2(uv + vec2( 0.5,-0.5)) / TextureSize.xy;
     vec4 col1 = COMPAT_TEXTURE( Texture, uv1 );
     vec4 col2 = COMPAT_TEXTURE( Texture, uv2 );
     vec4 col = (col1 + col2) / vec4(2.0);
 #ifdef VERTICAL_BLUR
-    vec2 uv3 = vec2(iuv.x - 0.5 , uv.y + 0.5) / TextureSize.xy;
-    vec2 uv4 = vec2(iuv.x + 0.5 , uv.y + 0.5) / TextureSize.xy;
+    vec2 uv3 = vec2(uv + vec2(-0.5,0.5)) / TextureSize.xy;
+    vec2 uv4 = vec2(uv + vec2( 0.5,0.5)) / TextureSize.xy;
     vec4 col3 = COMPAT_TEXTURE( Texture, uv3 );
     vec4 col4 = COMPAT_TEXTURE( Texture, uv4 );
     col = (((col3 + col4) / vec4(2.0)) + col) / vec4(2.0);
 #endif
     return col;
 #else
-    uv = vec2(iuv.x - 0.5 , uv.y - 0.5) / TextureSize.xy;
+    uv = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
     return COMPAT_TEXTURE( Texture, uv );
 #endif
 }
