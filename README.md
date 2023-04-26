@@ -54,7 +54,10 @@ Default v0.1 variant with horizontal blur and NTSC effect for megadrive.
 #### CRT-PI
 ![p240 CRT-PI](https://user-images.githubusercontent.com/6412699/233823215-440c5763-34ac-4054-8733-c63dffc43747.PNG)
 
-
-### Nearest neighbor vs shader comparison
+#### Nearest neighbor vs shader comparison
 ![p240 comparison org](https://user-images.githubusercontent.com/6412699/233807532-4b3cbd58-88ff-4c43-8e70-790feafbb599.PNG)
 ![p240 comparison](https://user-images.githubusercontent.com/6412699/233807474-1f8e1856-7d4e-413f-ab2d-c6bd7cd8568a.PNG)
+
+#### gizmo-crt-n64-curvator vs bilinear vs nearest neighbor
+![crt-n64 vs bilinear vs nearest neighbor](https://user-images.githubusercontent.com/6412699/234712310-ab777535-6232-41e4-bbb6-8920ce9c5b4e.png)
+
