@@ -28,15 +28,15 @@
  * uses gold noise shader https://www.shadertoy.com/view/ltB3zD
  */
 
-#define CURVATE 
+//#define CURVATE 
 //#define INTERLACE
 //#define HORIZONTAL_BLUR
 #if defined HORIZONTAL_BLUR
 //#define VERTICAL_BLUR
 #endif
 //define BGR_LCD_PATTERN
-#define NTSC
-//#define ANAMORPH
+//#define NTSC
+#define ANAMORPH
 
 #define BRIGHTNESS 0.5
 #define BARREL_DISTORTION 0.12

@@ -36,6 +36,7 @@
 #endif
 //define BGR_LCD_PATTERN
 //#define NTSC
+//#define ANAMORPH
 
 #define BRIGHTNESS 0.5
 #define BARREL_DISTORTION 0.12
@@ -241,7 +242,11 @@ void main()
 #else
     COMPAT_PRECISION vec2 texcoord = TEX0.xy;
 #endif    
+#ifdef ANAMORPH
         COMPAT_PRECISION float aspect = 3.0 / 4.0;
+#else
+        COMPAT_PRECISION float aspect = InputSize.y / InputSize.x;
+#endif
         COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
 
         COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
