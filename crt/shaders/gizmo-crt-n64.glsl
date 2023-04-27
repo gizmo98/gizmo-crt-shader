@@ -208,9 +208,9 @@ vec3 XCoords(in float coord, in float y, in float factor){
     COMPAT_PRECISION float spread = 0.333;
     COMPAT_PRECISION vec3 coords = vec3(coord + y * ntsc_factor);
 #ifdef BGR_LCD_PATTERN
-    coords.b += spread * 2.0;
-#else
     coords.r += spread * 2.0;
+#else
+    coords.b += spread * 2.0;
 #endif
     coords.g += spread;
     coords *= factor;
