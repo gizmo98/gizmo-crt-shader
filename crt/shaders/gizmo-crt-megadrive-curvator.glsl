@@ -244,7 +244,6 @@ void main()
         COMPAT_PRECISION float aspect = 4.0 / 3.0;
         COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
 
-        COMPAT_PRECISION vec2 uv = fragCoord.xy / TextureSize.xy * 1.5;
         COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
         COMPAT_PRECISION float yCoord = YCoord(fragCoord.y, factor.y) ;
         COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, fract(yCoord), factor.y) * 1.0 / aspect;
