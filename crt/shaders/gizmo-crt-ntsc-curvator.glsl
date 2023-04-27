@@ -241,12 +241,12 @@ void main()
 #else
     COMPAT_PRECISION vec2 texcoord = TEX0.xy;
 #endif    
-        COMPAT_PRECISION float aspect = 4.0 / 3.0;
+        COMPAT_PRECISION float aspect = InputSize.y / InputSize.x;
         COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
 
         COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
         COMPAT_PRECISION float yCoord = YCoord(fragCoord.y, factor.y) ;
-        COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, fract(yCoord), factor.y) * 1.0 / aspect;
+        COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, fract(yCoord), factor.y) * aspect;
 
         COMPAT_PRECISION vec2 coord_r = vec2(xCoords.r, yCoord) / TextureSize.xy;
         COMPAT_PRECISION vec2 coord_g = vec2(xCoords.g, yCoord) / TextureSize.xy;
