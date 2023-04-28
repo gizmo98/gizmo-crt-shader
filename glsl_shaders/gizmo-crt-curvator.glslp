@@ -1,8 +1,4 @@
 shaders = "1"
-shader0 = "shaders/gizmo-crt-curvator.glsl"
-filter_linear0 = "true"
-
-shaders = "1"
 shader0 = "shaders/gizmo-crt.glsl"
 filter_linear0 = "true"
 
