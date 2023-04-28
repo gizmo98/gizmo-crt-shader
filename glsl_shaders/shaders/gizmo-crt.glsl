@@ -7,8 +7,13 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
- * version 0.2
- * 26.04.2023
+ * version 0.3, 28.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - unify shader in one file
+ * - replace fixed macros and defines with pragmas
+ * - add BLUR_OFFSET setting. This setting can be used to set the strength of a bad signal
+ * - add ANAMORPH setting for megadrive and snes
+ * 
  * https://github.com/gizmo98/gizmo-crt-shader
  *
  * This shader tries to mimic a CRT without extensive use of scanlines and rgb pattern emulation.
@@ -22,6 +27,7 @@
  * BGR_LCD_PATTERN most LCDs have a RGB pixel pattern. Enable BGR pattern with this switch
  * NTSC add NTSC effect
  * BRIGHTNESS makes scanlines more or less visible
+ * ANAMORPH use 4/3 aspect for megadrive and snes
  *
  * uses parts of RetroPie barrel distortation shader
  * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
@@ -29,17 +35,17 @@
  */
 
 #define CURVATE 
-//#define INTERLACE
-//#define HORIZONTAL_BLUR
-#if defined HORIZONTAL_BLUR
-//#define VERTICAL_BLUR
-#endif
-//define BGR_LCD_PATTERN
-#define NTSC
+//#define NTSC
 //#define ANAMORPH
 
-#define BRIGHTNESS 0.5
-#define BARREL_DISTORTION 0.12
+#pragma parameter BRIGHTNESS "Scanline Intensity"              0.5 0.1 1.0 0.05
+#pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
+#pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
+#pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
+#pragma parameter BARREL_DISTORTION "Screen Distortion factor" 0.12 0.0 0.3 0.01
+#pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
+#pragma parameter INTERLACE "Interlacing effect"               0.0 0.0 1.0 1.0
+#pragma parameter ANAMORPH "SNES, MEGADRIVE Aspect"            0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -71,6 +77,26 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float BRIGHTNESS;
+uniform COMPAT_PRECISION float HORIZONTAL_BLUR;
+uniform COMPAT_PRECISION float VERTICAL_BLUR;
+uniform COMPAT_PRECISION float BLUR_OFFSET;
+uniform COMPAT_PRECISION float BARREL_DISTORTION;
+uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
+uniform COMPAT_PRECISION float INTERLACE;
+uniform COMPAT_PRECISION float ANAMORPH;
+#else
+#define BRIGHTNESS 0.5
+#define HORIZONTAL_BLUR 0.0
+#define VERTICAL_BLUR 0.0
+#define BLUR_OFFSET 0.5
+#define BARREL_DISTORTION 0.12
+#define BGR_LCD_PATTERN 0.0
+#define INTERLACE 0.0
+#define ANAMORPH 0.0
+#endif
 
 void main()
 {
@@ -109,6 +135,17 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float BRIGHTNESS;
+uniform COMPAT_PRECISION float HORIZONTAL_BLUR;
+uniform COMPAT_PRECISION float VERTICAL_BLUR;
+uniform COMPAT_PRECISION float BLUR_OFFSET;
+uniform COMPAT_PRECISION float BARREL_DISTORTION;
+uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
+uniform COMPAT_PRECISION float INTERLACE;
+uniform COMPAT_PRECISION float ANAMORPH;
+#endif
+
 float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio
 
 float gold_noise(in vec2 xy, in float seed){
@@ -131,24 +168,25 @@ vec4 textureVertical(in vec2 uv){
 
     COMPAT_PRECISION vec2 iuv = floor(uv);
     COMPAT_PRECISION vec2 fuv = uv - iuv;    
-#ifdef HORIZONTAL_BLUR
-    vec2 uv1 = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
-    vec2 uv2 = vec2(uv + vec2( 0.5,-0.5)) / TextureSize.xy;
-    vec4 col1 = COMPAT_TEXTURE( Texture, uv1 );
-    vec4 col2 = COMPAT_TEXTURE( Texture, uv2 );
-    vec4 col = (col1 + col2) / vec4(2.0);
-#ifdef VERTICAL_BLUR
-    vec2 uv3 = vec2(uv + vec2(-0.5,0.5)) / TextureSize.xy;
-    vec2 uv4 = vec2(uv + vec2( 0.5,0.5)) / TextureSize.xy;
-    vec4 col3 = COMPAT_TEXTURE( Texture, uv3 );
-    vec4 col4 = COMPAT_TEXTURE( Texture, uv4 );
-    col = (((col3 + col4) / vec4(2.0)) + col) / vec4(2.0);
-#endif
-    return col;
-#else
-    uv = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
-    return COMPAT_TEXTURE( Texture, uv );
-#endif
+    if (HORIZONTAL_BLUR == 1.0){
+        vec2 uv1 = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
+        vec2 uv2 = vec2(uv + vec2(-0.5 + BLUR_OFFSET,-0.5)) / TextureSize.xy;
+        vec4 col1 = COMPAT_TEXTURE( Texture, uv1 );
+        vec4 col2 = COMPAT_TEXTURE( Texture, uv2 );
+        vec4 col = (col1 + col2) / vec4(2.0);
+        if (VERTICAL_BLUR == 1.0){
+            vec2 uv3 = vec2(uv + vec2(-0.5,-0.5 +BLUR_OFFSET)) / TextureSize.xy;
+            vec2 uv4 = vec2(uv + vec2(-0.5 + BLUR_OFFSET,-0.5 +BLUR_OFFSET)) / TextureSize.xy;
+            vec4 col3 = COMPAT_TEXTURE( Texture, uv3 );
+            vec4 col4 = COMPAT_TEXTURE( Texture, uv4 );
+            col = (((col3 + col4) / vec4(2.0)) + col) / vec4(2.0);
+        }
+        return col;
+    }
+    else{
+        uv = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
+        return COMPAT_TEXTURE( Texture, uv );
+    }
 }
 
 vec4 textureCRT(in vec2 uvr, in vec2 uvg, in vec2 uvb ){
@@ -200,19 +238,17 @@ vec4 Interlace(in vec4 col, in vec2 coord){
 }
 
 vec3 XCoords(in float coord, in float y, in float factor){
-#ifdef NTSC
-    COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    COMPAT_PRECISION float ntsc_factor = 0.50 * sin(iGlobalTime * 100.0);
-#else
     COMPAT_PRECISION float ntsc_factor = 0.0;
-#endif 
+    COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
+#ifdef NTSC       
+        ntsc_factor = 1.50 * sin(iGlobalTime * 100.0);
+#endif
     COMPAT_PRECISION float spread = 0.333;
     COMPAT_PRECISION vec3 coords = vec3(coord + y * ntsc_factor);
-#ifdef BGR_LCD_PATTERN
-    coords.r += spread * 2.0;
-#else
-    coords.b += spread * 2.0;
-#endif
+    if(BGR_LCD_PATTERN == 1.0)
+        coords.r += spread * 2.0;
+    else
+        coords.b += spread * 2.0;
     coords.g += spread;
     coords *= factor;
     return coords;
@@ -242,11 +278,9 @@ void main()
 #else
     COMPAT_PRECISION vec2 texcoord = TEX0.xy;
 #endif    
-#ifdef ANAMORPH
-        COMPAT_PRECISION float aspect = 3.0 / 4.0;
-#else
         COMPAT_PRECISION float aspect = InputSize.y / InputSize.x;
-#endif
+        if (ANAMORPH == 1.0)
+            aspect = 3.0 / 4.0;
         COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
 
         COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
@@ -259,9 +293,8 @@ void main()
 
         FragColor = textureCRT(coord_r,coord_g,coord_b);
         FragColor = AddNoise(FragColor, fragCoord);
-#ifdef INTERLACE
-        FragColor = Interlace(FragColor, coord_r);
-#endif
+        if (INTERLACE == 1.0)
+            FragColor = Interlace(FragColor, coord_r);
         FragColor = AddScanlines(FragColor, coord_r);
 #ifdef CURVATE
    }

@@ -21,21 +21,19 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 ![scanlines](https://user-images.githubusercontent.com/6412699/233806373-d1eb7ba1-576f-498f-a54e-336f1a3f8ae8.png)
 ![240p test suite - 2](https://user-images.githubusercontent.com/6412699/233807008-cbbd909a-49a7-45f0-b064-e87ed55ed568.PNG)
 
+
 ## Variants
 # gizmo-crt.glslp
-Default v0.1 variant.
+Default v0.3 variant.
 
 # gizmo-crt-n64.glslp
-Default v0.1 variant with vertical and horizontal blur for n64.
+Default v0.3 variant with vertical and horizontal blur for n64.
 
 # gizmo-crt-megadrive.glslp
-Default v0.1 variant with horizontal blur for megadrive.
+Default v0.3 variant with horizontal blur and 4:3 aspect for megadrive.
 
-# gizmo-crt-ntsc.glslp
-Default v0.1 variant with NTSC effect.
-
-# gizmo-crt-megadrive.glslp
-Default v0.1 variant with horizontal blur and NTSC effect for megadrive.
+# gizmo-crt-snes.glslp
+Default v0.3 variant with 4:3 aspect for snes.
 
 ## Results
 ![240p test suite - 1](https://user-images.githubusercontent.com/6412699/233807021-fab24872-67f6-4b24-9cf6-d35d663cd763.PNG)
