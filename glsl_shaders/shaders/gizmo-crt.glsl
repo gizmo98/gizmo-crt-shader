@@ -38,7 +38,7 @@
 //#define NTSC
 //#define ANAMORPH
 
-#pragma parameter BRIGHTNESS "Scanline Intensity"              0.5 0.1 1.0 0.05
+#pragma parameter BRIGHTNESS "Scanline Intensity"              0.5 0.05 1.0 0.05
 #pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
 #pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
