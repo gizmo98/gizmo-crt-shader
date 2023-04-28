@@ -278,7 +278,7 @@ void main()
 #else
     COMPAT_PRECISION vec2 texcoord = TEX0.xy;
 #endif    
-        COMPAT_PRECISION float aspect = InputSize.y / InputSize.x;
+        COMPAT_PRECISION float aspect = 0.8;
         if (ANAMORPH == 1.0)
             aspect = 3.0 / 4.0;
         COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
