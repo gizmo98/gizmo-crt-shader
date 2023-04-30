@@ -36,7 +36,7 @@
  * VERTICAL_BLUR vertical blur simulates N64 vertical blur 
  * BGR_LCD_PATTERN most LCDs have a RGB pixel pattern. Enable BGR pattern with this switch
  * BRIGHTNESS makes scanlines more or less visible
- * SHRINK shrink screen in Z direction
+ * SHRINK shrink screen in X direction
  *
  * uses parts of RetroPie barrel distortation shader
  * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
@@ -218,9 +218,9 @@ void main()
 
     if (params.SHRINK > 0.0)
     {
-        texcoord.y -= 0.5;
-        texcoord.y *= 1.0 + params.SHRINK;
-        texcoord.y += 0.5; 
+        texcoord.x -= 0.5;
+        texcoord.x *= 1.0 + params.SHRINK;
+        texcoord.x += 0.5; 
     }
 
     texcoord = Distort(texcoord);
