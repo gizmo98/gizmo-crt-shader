@@ -13,6 +13,7 @@
  * - fix aspect ratio issue 
  * - fix screen centering issue
  * - use CRT/PI curvator
+ * - add noise intensity value
  *
  * version 0.35, 29.04.2023
  * ---------------------------------------------------------------------------------------
@@ -36,7 +37,8 @@
  * VERTICAL_BLUR vertical blur simulates N64 vertical blur 
  * BGR_LCD_PATTERN most LCDs have a RGB pixel pattern. Enable BGR pattern with this switch
  * BRIGHTNESS makes scanlines more or less visible
- * SHRINK shrink screen in X direction
+ * SHRINK scale screen in X direction
+ * SNR noise intensity 
  *
  * uses parts of RetroPie barrel distortation shader
  * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
@@ -58,6 +60,7 @@ layout(push_constant) uniform Push
 	float BLUR_OFFSET;
 	float BGR_LCD_PATTERN;
 	float SHRINK;
+	float SNR;
 } params;
 
 layout(std140, set = 0, binding = 0) uniform UBO
@@ -72,7 +75,8 @@ layout(std140, set = 0, binding = 0) uniform UBO
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
 #pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
-#pragma parameter SHRINK "Shrink screen"                       0.0 0.0 1.0 0.01
+#pragma parameter SHRINK "Horizontal scale"                    0.0 0.0 1.0 0.01
+#pragma parameter SNR "Noise intensity"                        1.0 0.0 2.0 0.1
 
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
@@ -158,7 +162,8 @@ vec2 GetIuv(in vec2 uv){
 vec4 AddNoise(in vec4 col, in vec2 coord){
     /* Add some subpixel noise which simulates small CRT color variations */
     float iGlobalTime = float(params.FrameCount)*0.025;
-    return clamp(col + gold_noise(coord,sin(iGlobalTime))/32.0 - 1.0/64.0,0.0,1.0);
+    float snr = params.SNR * 0.03125;
+    return clamp(col + gold_noise(coord,sin(iGlobalTime)) * snr - snr/2.0,0.0,1.0);
 }
 
 vec4 AddScanlines(in vec4 col, in vec2 coord){
