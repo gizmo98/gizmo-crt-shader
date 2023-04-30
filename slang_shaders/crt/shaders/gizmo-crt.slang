@@ -72,7 +72,7 @@ layout(std140, set = 0, binding = 0) uniform UBO
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
 #pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
-#pragma parameter SHRINK "Shrink screen"                       0.0 0.0 1.0 0.05
+#pragma parameter SHRINK "Shrink screen"                       0.0 0.0 1.0 0.01
 
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
