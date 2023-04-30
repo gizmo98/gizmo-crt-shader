@@ -40,7 +40,7 @@
  * SHRINK scale screen in X direction
  * SNR noise intensity 
  *
- * uses parts of RetroPie barrel distortation shader
+ * uses parts curvator of CRT-PI shader
  * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
  * uses gold noise shader https://www.shadertoy.com/view/ltB3zD
  */
