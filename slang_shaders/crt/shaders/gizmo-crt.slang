@@ -8,6 +8,12 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.40, 29.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - fix aspect ratio issue 
+ * - fix screen centering issue
+ * - use CRT/PI curvator
+ *
  * version 0.35, 29.04.2023
  * ---------------------------------------------------------------------------------------
  * - initial slang port
@@ -30,7 +36,7 @@
  * VERTICAL_BLUR vertical blur simulates N64 vertical blur 
  * BGR_LCD_PATTERN most LCDs have a RGB pixel pattern. Enable BGR pattern with this switch
  * BRIGHTNESS makes scanlines more or less visible
- * ANAMORPH use 4/3 aspect for megadrive and snes
+ * SHRINK shrink screen in Z direction
  *
  * uses parts of RetroPie barrel distortation shader
  * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
@@ -44,13 +50,14 @@ layout(push_constant) uniform Push
 	vec4 OriginalSize;
 	vec4 OutputSize;
 	uint FrameCount;
+	float CURVATURE_X;
+	float CURVATURE_Y;
 	float BRIGHTNESS;
 	float HORIZONTAL_BLUR;
 	float VERTICAL_BLUR;
 	float BLUR_OFFSET;
-	float BARREL_DISTORTION;
 	float BGR_LCD_PATTERN;
-	float ANAMORPH;
+	float SHRINK;
 } params;
 
 layout(std140, set = 0, binding = 0) uniform UBO
@@ -58,13 +65,14 @@ layout(std140, set = 0, binding = 0) uniform UBO
 	mat4 MVP;
 } global;
 
+#pragma parameter CURVATURE_X "Screen curvature - horizontal"  0.10 0.0 1.0  0.01
+#pragma parameter CURVATURE_Y "Screen curvature - vertical"    0.15 0.0 1.0  0.01
 #pragma parameter BRIGHTNESS "Scanline Intensity"              0.5 0.05 1.0 0.05
 #pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
 #pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
-#pragma parameter BARREL_DISTORTION "Screen Distortion factor" 0.12 0.0 0.3 0.01
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
-#pragma parameter ANAMORPH "SNES, MEGADRIVE Aspect"            0.0 0.0 1.0 1.0
+#pragma parameter SHRINK "Shrink screen"                       0.0 0.0 1.0 0.05
 
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
@@ -164,14 +172,10 @@ vec4 AddScanlines(in vec4 col, in vec2 coord){
     return col;
 }
 
-vec3 XCoords(in float coord, in float y, in float factor){
-    float ntsc_factor = 0.0;
+vec3 XCoords(in float coord, in float factor){
     float iGlobalTime = float(params.FrameCount)*0.025;
-#ifdef NTSC       
-        ntsc_factor = 1.50 * sin(iGlobalTime * 100.0);
-#endif
     float spread = 0.333;
-    vec3 coords = vec3(coord + y * ntsc_factor);
+    vec3 coords = vec3(coord);
     if(params.BGR_LCD_PATTERN == 1.0)
         coords.r += spread * 2.0;
     else
@@ -185,40 +189,59 @@ float YCoord(in float coord, in float factor){
     return coord * factor;
 }
 
+vec2 CURVATURE_DISTORTION = vec2(params.CURVATURE_X, params.CURVATURE_Y);
+// Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
+
+vec2 Distort(vec2 coord)
+{
+//  coord *= screenScale; // not necessary in slang
+    coord -= vec2(0.5);
+    float rsq = coord.x * coord.x + coord.y * coord.y;
+    coord += coord * (CURVATURE_DISTORTION * rsq);
+    coord *= barrelScale;
+    if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+        coord = vec2(-1.0);     // If out of bounds, return an invalid value.
+    else
+    {
+        coord += vec2(0.5);
+//      coord /= screenScale; // not necessary in slang
+    }
+
+    return coord;
+}
+
 void main()
 {
     vec2 texSize = vec2(textureSize(Source, 0));
     vec2 texcoord = vTexCoord.xy;
-    float rescale = 1.0 - (0.25 * params.BARREL_DISTORTION);
 
-    vec2 scale = texSize / params.SourceSize.xy;
-    vec2 tex0 = vTexCoord.xy * scale;
-    texcoord = tex0 - vec2(0.5);
-    float rsq = texcoord.x * texcoord.x + texcoord.y * texcoord.y;
-    texcoord = texcoord + (texcoord * (params.BARREL_DISTORTION * rsq));
-    texcoord *= rescale;
-    if (abs(texcoord.x) > 0.5 || abs(texcoord.y) > 0.5)
+    if (params.SHRINK > 0.0)
+    {
+        texcoord.y -= 0.5;
+        texcoord.y *= 1.0 + params.SHRINK;
+        texcoord.y += 0.5; 
+    }
+
+    texcoord = Distort(texcoord);
+    if (texcoord.x < 0.0) 
+    {
         FragColor = vec4(0.0);
-    else
-    {  
-        texcoord += vec2(0.5);
-        texcoord /= scale;
-        float aspect = 1.0;
-        if (params.ANAMORPH == 1.0)
-            aspect = 0.85;
-        vec2 fragCoord = texcoord.xy * params.OutputSize.xy;
+        return;
+    }
 
-        vec2 factor = texSize.xy / params.OutputSize.xy ;
-        float yCoord = YCoord(fragCoord.y, factor.y) ;
-        vec3  xCoords = XCoords(fragCoord.x, fract(yCoord), factor.y) * aspect;
+    vec2 fragCoord = texcoord.xy * params.OutputSize.xy;
 
-        vec2 coord_r = vec2(xCoords.r, yCoord) / texSize.xy;
-        vec2 coord_g = vec2(xCoords.g, yCoord) / texSize.xy;
-        vec2 coord_b = vec2(xCoords.b, yCoord) / texSize.xy;
+    vec2 factor = texSize.xy / params.OutputSize.xy ;
+    highp float yCoord = YCoord(fragCoord.y, factor.y) ;
+    highp vec3 xCoords = XCoords(fragCoord.x, factor.x) ;
 
-        FragColor = textureCRT(coord_r,coord_g,coord_b);
-        FragColor = AddNoise(FragColor, fragCoord);
-        FragColor = AddScanlines(FragColor, coord_r);
-        FragColor.a = 1.0;
-   }
+    vec2 coord_r = vec2(xCoords.r/ texSize.x, texcoord.y) ;
+    vec2 coord_g = vec2(xCoords.g, yCoord) / texSize.xy;
+    vec2 coord_b = vec2(xCoords.b, yCoord) / texSize.xy;
+
+    FragColor = textureCRT(coord_r,coord_g,coord_b);
+    FragColor = AddNoise(FragColor, fragCoord);
+    FragColor = AddScanlines(FragColor, coord_r);
+    FragColor.a = 1.0;
 }
