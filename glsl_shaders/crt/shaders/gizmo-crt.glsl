@@ -81,6 +81,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 screenScale;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -113,6 +114,7 @@ uniform COMPAT_PRECISION float SNR;
 
 void main()
 {
+    screenScale = TextureSize / InputSize;
     gl_Position = VertexCoord.x * MVPMatrix[0] + VertexCoord.y * MVPMatrix[1] + VertexCoord.z * MVPMatrix[2] + VertexCoord.w * MVPMatrix[3];
     TEX0.xy = TexCoord.xy;
 }
@@ -147,6 +149,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 screenScale;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float CURVATURE_X;
@@ -225,7 +228,7 @@ vec4 AddNoise(in vec4 col, in vec2 coord){
     /* Add some subpixel noise which simulates small CRT color variations */
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
     COMPAT_PRECISION float snr = SNR * 0.03125;
-    return clamp(col + gold_noise(coord,sin(iGlobalTime)) * SNR - SNR/2.0,0.0,1.0);
+    return clamp(col + gold_noise(coord,sin(iGlobalTime)) * snr - snr/2.0,0.0,1.0);
 }
 
 vec4 AddScanlines(in vec4 col, in vec2 coord){
