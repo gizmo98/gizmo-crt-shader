@@ -8,6 +8,10 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.41, 01.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - add more references for used sources 
+ *
  * version 0.40, 29.04.2023
  * ---------------------------------------------------------------------------------------
  * - fix aspect ratio issue 
@@ -40,9 +44,9 @@
  * SHRINK scale screen in X direction
  * SNR noise intensity 
  *
- * uses parts curvator of CRT-PI shader
- * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
- * uses gold noise shader https://www.shadertoy.com/view/ltB3zD
+ * uses parts curvator of CRT-PI shader from davej https://github.com/libretro/slang-shaders/blob/master/crt/shaders/crt-pi.slang
+ * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
+ * uses gold noise shader from dcerisano https://www.shadertoy.com/view/ltB3zD
  */
 
 
