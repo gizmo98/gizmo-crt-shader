@@ -56,7 +56,7 @@
 #pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter SHRINK "Horizontal scale"                    0.0 0.0 1.0 0.01
-#pragma parameter SNR "Noise intensity"                        1.0 0.0 2.0 0.1
+#pragma parameter SNR "Noise intensity"                        1.0 0.0 3.0 0.1
 
 #if defined(VERTEX)
 
