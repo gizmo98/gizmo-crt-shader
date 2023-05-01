@@ -7,6 +7,22 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.41, 01.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - add more references for used sources 
+ *
+ * version 0.40, 29.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - fix aspect ratio issue 
+ * - fix screen centering issue
+ * - use CRT/PI curvator
+ * - add noise intensity value
+ *
+ * version 0.35, 29.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - initial slang port
+ * - remove NTSC and INTERLACE effects
+ * 
  * version 0.3, 28.04.2023
  * ---------------------------------------------------------------------------------------
  * - unify shader in one file
@@ -20,32 +36,27 @@
  * It uses horizontal subpixel scaling and adds brightness dependent scanline patterns and allows 
  * fractional scaling. 
  *
- * CURVATE distorts the screen by BARREL_DISTORTION value
  * HORIZONTAL_BLUR simulates a bad composite signal which is neede for consoles like megadrive 
  * VERTICAL_BLUR vertical blur simulates N64 vertical blur 
- * INTERLACE enables a interlacing effect whih dims odd and even lines from frame to frame 
  * BGR_LCD_PATTERN most LCDs have a RGB pixel pattern. Enable BGR pattern with this switch
- * NTSC add NTSC effect
  * BRIGHTNESS makes scanlines more or less visible
- * ANAMORPH use 4/3 aspect for megadrive and snes
+ * SHRINK scale screen in X direction
+ * SNR noise intensity 
  *
- * uses parts of RetroPie barrel distortation shader
- * uses parts of texture anti-aliasing shader https://www.shadertoy.com/view/ldsSRX
- * uses gold noise shader https://www.shadertoy.com/view/ltB3zD
+ * uses parts curvator of CRT-PI shader from davej https://github.com/libretro/glsl-shaders/blob/master/crt/shaders/crt-pi.glsl
+ * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
+ * uses gold noise shader from dcerisano https://www.shadertoy.com/view/ltB3zD
  */
 
-#define CURVATE 
-//#define NTSC
-//#define ANAMORPH
-
+#pragma parameter CURVATURE_X "Screen curvature - horizontal"  0.10 0.0 1.0  0.01
+#pragma parameter CURVATURE_Y "Screen curvature - vertical"    0.15 0.0 1.0  0.01
 #pragma parameter BRIGHTNESS "Scanline Intensity"              0.5 0.05 1.0 0.05
 #pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
 #pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
-#pragma parameter BARREL_DISTORTION "Screen Distortion factor" 0.12 0.0 0.3 0.01
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
-#pragma parameter INTERLACE "Interlacing effect"               0.0 0.0 1.0 1.0
-#pragma parameter ANAMORPH "SNES, MEGADRIVE Aspect"            0.0 0.0 1.0 1.0
+#pragma parameter SHRINK "Horizontal scale"                    0.0 0.0 1.0 0.01
+#pragma parameter SNR "Noise intensity"                        1.0 0.0 2.0 0.1
 
 #if defined(VERTEX)
 
@@ -79,23 +90,25 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float CURVATURE_X;
+uniform COMPAT_PRECISION float CURVATURE_Y;
 uniform COMPAT_PRECISION float BRIGHTNESS;
 uniform COMPAT_PRECISION float HORIZONTAL_BLUR;
 uniform COMPAT_PRECISION float VERTICAL_BLUR;
 uniform COMPAT_PRECISION float BLUR_OFFSET;
-uniform COMPAT_PRECISION float BARREL_DISTORTION;
 uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
-uniform COMPAT_PRECISION float INTERLACE;
-uniform COMPAT_PRECISION float ANAMORPH;
+uniform COMPAT_PRECISION float SHRINK;
+uniform COMPAT_PRECISION float SNR;
 #else
+#define CURVATURE_X 0.1
+#define CURVATURE_Y 0.15
 #define BRIGHTNESS 0.5
 #define HORIZONTAL_BLUR 0.0
 #define VERTICAL_BLUR 0.0
 #define BLUR_OFFSET 0.5
-#define BARREL_DISTORTION 0.12
 #define BGR_LCD_PATTERN 0.0
-#define INTERLACE 0.0
-#define ANAMORPH 0.0
+#define SHRINK 0.0
+#define SNR 1.0
 #endif
 
 void main()
@@ -136,14 +149,15 @@ uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float CURVATURE_X;
+uniform COMPAT_PRECISION float CURVATURE_Y;
 uniform COMPAT_PRECISION float BRIGHTNESS;
 uniform COMPAT_PRECISION float HORIZONTAL_BLUR;
 uniform COMPAT_PRECISION float VERTICAL_BLUR;
 uniform COMPAT_PRECISION float BLUR_OFFSET;
-uniform COMPAT_PRECISION float BARREL_DISTORTION;
 uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
-uniform COMPAT_PRECISION float INTERLACE;
-uniform COMPAT_PRECISION float ANAMORPH;
+uniform COMPAT_PRECISION float SHRINK;
+uniform COMPAT_PRECISION float SNR;
 #endif
 
 float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio
@@ -210,7 +224,8 @@ vec2 GetIuv(in vec2 uv){
 vec4 AddNoise(in vec4 col, in vec2 coord){
     /* Add some subpixel noise which simulates small CRT color variations */
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    return clamp(col + gold_noise(coord,sin(iGlobalTime))/32.0 - 1.0/64.0,0.0,1.0);
+    COMPAT_PRECISION float snr = SNR * 0.03125;
+    return clamp(col + gold_noise(coord,sin(iGlobalTime)) * SNR - SNR/2.0,0.0,1.0);
 }
 
 vec4 AddScanlines(in vec4 col, in vec2 coord){
@@ -237,14 +252,10 @@ vec4 Interlace(in vec4 col, in vec2 coord){
     return col;
 }
 
-vec3 XCoords(in float coord, in float y, in float factor){
-    COMPAT_PRECISION float ntsc_factor = 0.0;
+vec3 XCoords(in float coord, in float factor){
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-#ifdef NTSC       
-        ntsc_factor = 1.50 * sin(iGlobalTime * 100.0);
-#endif
     COMPAT_PRECISION float spread = 0.333;
-    COMPAT_PRECISION vec3 coords = vec3(coord + y * ntsc_factor);
+    COMPAT_PRECISION vec3 coords = vec3(coord);
     if(BGR_LCD_PATTERN == 1.0)
         coords.r += spread * 2.0;
     else
@@ -258,46 +269,55 @@ float YCoord(in float coord, in float factor){
     return coord * factor;
 }
 
+vec2 Distort(vec2 coord)
+{
+	vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
+	// Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+	vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
+	coord *= screenScale;
+	coord -= vec2(0.5);
+	float rsq = coord.x * coord.x + coord.y * coord.y;
+	coord += coord * (CURVATURE_DISTORTION * rsq);
+	coord *= barrelScale;
+	if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+		coord = vec2(-1.0);		// If out of bounds, return an invalid value.
+	else
+	{
+		coord += vec2(0.5);
+		coord /= screenScale;
+	}
+
+	return coord;
+}
+
 void main()
 {
-#ifdef CURVATE    
-    COMPAT_PRECISION float rescale = 1.0 - (0.25 * BARREL_DISTORTION);
+    vec2 texcoord = TEX0.xy;
 
-    COMPAT_PRECISION vec2 scale = TextureSize / InputSize;
-    COMPAT_PRECISION vec2 tex0 = TEX0.xy * scale;
-    COMPAT_PRECISION vec2 texcoord = tex0 - vec2(0.5);
-    COMPAT_PRECISION float rsq = texcoord.x * texcoord.x + texcoord.y * texcoord.y;
-    texcoord = texcoord + (texcoord * (BARREL_DISTORTION * rsq));
-    texcoord *= rescale;
-    if (abs(texcoord.x) > 0.5 || abs(texcoord.y) > 0.5)
-        FragColor = vec4(0.0);
-    else
-    {  
-        texcoord += vec2(0.5);
-        texcoord /= scale;
-#else
-    COMPAT_PRECISION vec2 texcoord = TEX0.xy;
-#endif    
-        COMPAT_PRECISION float aspect = 0.8;
-        if (ANAMORPH == 1.0)
-            aspect = 3.0 / 4.0;
-        COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
+    if (SHRINK > 0.0)
+    {
+        texcoord.x -= 0.5;
+        texcoord.x *= 1.0 + SHRINK;
+        texcoord.x += 0.5; 
+    }
 
-        COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
-        COMPAT_PRECISION float yCoord = YCoord(fragCoord.y, factor.y) ;
-        COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, fract(yCoord), factor.y) * aspect;
+    texcoord = Distort(texcoord);
+	if (texcoord.x < 0.0){
+		gl_FragColor = vec4(0.0);
+        return;
+    }
+    
+    COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
+    COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
+    COMPAT_PRECISION float yCoord = YCoord(fragCoord.y, factor.y) ;
+    COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, factor.x);
 
-        COMPAT_PRECISION vec2 coord_r = vec2(xCoords.r, yCoord) / TextureSize.xy;
-        COMPAT_PRECISION vec2 coord_g = vec2(xCoords.g, yCoord) / TextureSize.xy;
-        COMPAT_PRECISION vec2 coord_b = vec2(xCoords.b, yCoord) / TextureSize.xy;
+    COMPAT_PRECISION vec2 coord_r = vec2(xCoords.r, yCoord) / TextureSize.xy;
+    COMPAT_PRECISION vec2 coord_g = vec2(xCoords.g, yCoord) / TextureSize.xy;
+    COMPAT_PRECISION vec2 coord_b = vec2(xCoords.b, yCoord) / TextureSize.xy;
 
-        FragColor = textureCRT(coord_r,coord_g,coord_b);
-        FragColor = AddNoise(FragColor, fragCoord);
-        if (INTERLACE == 1.0)
-            FragColor = Interlace(FragColor, coord_r);
-        FragColor = AddScanlines(FragColor, coord_r);
-#ifdef CURVATE
-   }
-#endif
+    FragColor = textureCRT(coord_r,coord_g,coord_b);
+    FragColor = AddNoise(FragColor, fragCoord);
+    FragColor = AddScanlines(FragColor, coord_r);
 }
 #endif
