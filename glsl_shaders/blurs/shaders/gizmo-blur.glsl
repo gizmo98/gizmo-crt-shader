@@ -13,7 +13,7 @@
  * 
  * https://github.com/gizmo98/gizmo-crt-shader
  *
- * This shader allows fine granular blur in x and y position with colour bleeding.
+ * This shader allows fine granular blur in x and y direction with colour bleeding.
  *
  * HORIZONTAL_BLUR simulates a bad composite signal which is neede for consoles like megadrive 
  * VERTICAL_BLUR vertical blur simulates N64 vertical blur 
