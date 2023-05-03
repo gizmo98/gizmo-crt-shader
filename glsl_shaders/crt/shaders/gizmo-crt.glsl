@@ -7,6 +7,13 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.42, 03.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - add colour bleeding parameter for more references for used sources 
+ * - add rgb coord dependent scanline function
+ * - remove not used interlacing function
+ * - give texture functions better names 
+ *
  * version 0.41, 01.05.2023
  * ---------------------------------------------------------------------------------------
  * - add more references for used sources 
@@ -42,6 +49,7 @@
  * BRIGHTNESS makes scanlines more or less visible
  * SHRINK scale screen in X direction
  * SNR noise intensity 
+ * COLOUR_BLEEDING colour bleeding intensity
  *
  * uses parts curvator of CRT-PI shader from davej https://github.com/libretro/glsl-shaders/blob/master/crt/shaders/crt-pi.glsl
  * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
@@ -57,6 +65,7 @@
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter SHRINK "Horizontal scale"                    0.0 0.0 1.0 0.01
 #pragma parameter SNR "Noise intensity"                        1.0 0.0 3.0 0.1
+#pragma parameter COLOUR_BLEEDING "Colour bleeding intensity"  0.0 0.0 3.0 0.1
 
 #if defined(VERTEX)
 
@@ -100,6 +109,7 @@ uniform COMPAT_PRECISION float BLUR_OFFSET;
 uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 uniform COMPAT_PRECISION float SHRINK;
 uniform COMPAT_PRECISION float SNR;
+uniform COMPAT_PRECISION float COLOUR_BLEEDING;
 #else
 #define CURVATURE_X 0.1
 #define CURVATURE_Y 0.15
@@ -110,6 +120,7 @@ uniform COMPAT_PRECISION float SNR;
 #define BGR_LCD_PATTERN 0.0
 #define SHRINK 0.0
 #define SNR 1.0
+#define COLOUR_BLEEDING 0.0
 #endif
 
 void main()
@@ -161,6 +172,7 @@ uniform COMPAT_PRECISION float BLUR_OFFSET;
 uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 uniform COMPAT_PRECISION float SHRINK;
 uniform COMPAT_PRECISION float SNR;
+uniform COMPAT_PRECISION float COLOUR_BLEEDING;
 #endif
 
 float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio
@@ -179,7 +191,7 @@ vec2 magnify(in vec2 uv, in vec2 res)
     uv *= res; 
     return (saturateA(fract(uv) / saturateA(fwidth(uv))) + floor(uv) - 0.5) / res.xy;
 }
-vec4 textureVertical(in vec2 uv){
+vec4 textureAABlur(in vec2 uv){
     uv = magnify(uv,TextureSize.xy);
     uv = uv*TextureSize.xy + 0.5;
 
@@ -206,8 +218,8 @@ vec4 textureVertical(in vec2 uv){
     }
 }
 
-vec4 textureCRT(in vec2 uvr, in vec2 uvg, in vec2 uvb ){
-    return vec4(textureVertical(uvr).r,textureVertical(uvg).g, textureVertical(uvb).b, 255);
+vec4 textureSubpixelScaling(in vec2 uvr, in vec2 uvg, in vec2 uvb){
+    return vec4(textureAABlur(uvr).r,textureAABlur(uvg).g, textureAABlur(uvb).b, 255);
 }
 
 float GetFuv(in vec2 uv){
@@ -217,13 +229,6 @@ float GetFuv(in vec2 uv){
     return abs((fuv*fuv*fuv*(fuv*(fuv*6.0-15.0)+10.0)).y - 0.5);
 }
 
-vec2 GetIuv(in vec2 uv){
-    uv = uv*TextureSize.xy;
-
-    COMPAT_PRECISION vec2 iuv = floor(uv);
-    return iuv;
-}
-
 vec4 AddNoise(in vec4 col, in vec2 coord){
     /* Add some subpixel noise which simulates small CRT color variations */
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
@@ -231,33 +236,19 @@ vec4 AddNoise(in vec4 col, in vec2 coord){
     return clamp(col + gold_noise(coord,sin(iGlobalTime)) * snr - snr/2.0,0.0,1.0);
 }
 
-vec4 AddScanlines(in vec4 col, in vec2 coord){
+vec4 AddScanlines(in vec4 col, in vec2 uvr, in vec2 uvg, in vec2 uvb){
     /* Add scanlines which are wider for dark colors.
        You cannot see scanlines if color is bright. */
     COMPAT_PRECISION float brightness = 1.0 / BRIGHTNESS * 0.05; 
     COMPAT_PRECISION float scale = (OutputSize.y / TextureSize.y) * 0.5;
     COMPAT_PRECISION float dim = brightness * scale;
-    col.rgb -= dim * (abs(1.5* (1.0 - col.rgb) * abs(abs(GetFuv(coord) - 0.5))));
-    return col;
-}
-
-vec4 Interlace(in vec4 col, in vec2 coord){
-    COMPAT_PRECISION float interlacing_intensity = 0.015;
-    COMPAT_PRECISION float scale = OutputSize.y / TextureSize.y;
-    COMPAT_PRECISION float dim = interlacing_intensity * scale;
-    COMPAT_PRECISION float pixel_brightness = abs(1.0 - (col.r + col.g + col.b) / 3.0 );
-    COMPAT_PRECISION float framecount = floor(float(FrameCount));
-    COMPAT_PRECISION float even = mod(framecount, 2.0); 
-    if (even == 0.0)
-        col.rgb -= dim * pixel_brightness * mod(GetIuv(coord),2.0).y;
-    else
-        col.rgb -= dim * pixel_brightness * (1.0 - mod(GetIuv(coord),2.0).y);
+    col.rgb -= dim * (abs(1.5* (1.0 - col.rgb) * abs(abs(vec3(GetFuv(uvr), GetFuv(uvg), GetFuv(uvb)) - 0.5))));
     return col;
 }
 
 vec3 XCoords(in float coord, in float factor){
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    COMPAT_PRECISION float spread = 0.333;
+    COMPAT_PRECISION float spread = 0.333 + COLOUR_BLEEDING;
     COMPAT_PRECISION vec3 coords = vec3(coord);
     if(BGR_LCD_PATTERN == 1.0)
         coords.r += spread * 2.0;
@@ -274,23 +265,23 @@ float YCoord(in float coord, in float factor){
 
 vec2 Distort(vec2 coord)
 {
-	vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
-	// Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
-	vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
-	coord *= screenScale;
-	coord -= vec2(0.5);
-	float rsq = coord.x * coord.x + coord.y * coord.y;
-	coord += coord * (CURVATURE_DISTORTION * rsq);
-	coord *= barrelScale;
-	if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
-		coord = vec2(-1.0);		// If out of bounds, return an invalid value.
-	else
-	{
-		coord += vec2(0.5);
-		coord /= screenScale;
-	}
+    vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
+    // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+    vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
+    coord *= screenScale;
+    coord -= vec2(0.5);
+    float rsq = coord.x * coord.x + coord.y * coord.y;
+    coord += coord * (CURVATURE_DISTORTION * rsq);
+    coord *= barrelScale;
+    if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+        coord = vec2(-1.0);		// If out of bounds, return an invalid value.
+    else
+    {
+        coord += vec2(0.5);
+        coord /= screenScale;
+    }
 
-	return coord;
+    return coord;
 }
 
 void main()
@@ -319,8 +310,8 @@ void main()
     COMPAT_PRECISION vec2 coord_g = vec2(xCoords.g, yCoord) / TextureSize.xy;
     COMPAT_PRECISION vec2 coord_b = vec2(xCoords.b, yCoord) / TextureSize.xy;
 
-    FragColor = textureCRT(coord_r,coord_g,coord_b);
+    FragColor = textureSubpixelScaling(coord_r,coord_g,coord_b);
     FragColor = AddNoise(FragColor, fragCoord);
-    FragColor = AddScanlines(FragColor, coord_r);
+    FragColor = AddScanlines(FragColor, coord_r, coord_g, coord_b);
 }
 #endif
