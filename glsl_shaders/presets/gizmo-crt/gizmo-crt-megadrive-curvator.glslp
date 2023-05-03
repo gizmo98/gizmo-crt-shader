@@ -3,7 +3,7 @@ shader0 = "../../crt/shaders/gizmo-crt.glsl"
 filter_linear0 = "true"
 scale_type0 = viewport
 
-parameters = "BRIGHTNESS;HORIZONTAL_BLUR;VERTICAL_BLUR;BLUR_OFFSET;BGR_LCD_PATTERN;SHRINK"
+parameters = "BRIGHTNESS;HORIZONTAL_BLUR;VERTICAL_BLUR;BLUR_OFFSET;BGR_LCD_PATTERN;SHRINK;COLOUR_BLEEDING"
 CURVATURE_X = "0.1"
 CURVATURE_Y = "0.1"
 BRIGHTNESS = "0.3"
