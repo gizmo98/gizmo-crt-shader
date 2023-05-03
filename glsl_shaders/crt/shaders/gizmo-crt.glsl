@@ -9,7 +9,7 @@
  *
  * version 0.42, 03.05.2023
  * ---------------------------------------------------------------------------------------
- * - add colour bleeding parameter for more references for used sources 
+ * - add colour bleeding parameter
  * - add rgb coord dependent scanline function
  * - remove not used interlacing function
  * - give texture functions better names 
