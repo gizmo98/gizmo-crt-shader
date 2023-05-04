@@ -8,6 +8,13 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.42, 04.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - add colour bleeding parameter
+ * - add rgb coord dependent scanline function
+ * - remove not used interlacing function
+ * - give texture functions better names 
+ *
  * version 0.41, 01.05.2023
  * ---------------------------------------------------------------------------------------
  * - add more references for used sources 
@@ -43,6 +50,7 @@
  * BRIGHTNESS makes scanlines more or less visible
  * SHRINK scale screen in X direction
  * SNR noise intensity 
+ * COLOUR_BLEEDING colour bleeding intensity
  *
  * uses parts curvator of CRT-PI shader from davej https://github.com/libretro/slang-shaders/blob/master/crt/shaders/crt-pi.slang
  * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
@@ -65,6 +73,7 @@ layout(push_constant) uniform Push
 	float BGR_LCD_PATTERN;
 	float SHRINK;
 	float SNR;
+	float COLOUR_BLEEDING;
 } params;
 
 layout(std140, set = 0, binding = 0) uniform UBO
@@ -81,6 +90,7 @@ layout(std140, set = 0, binding = 0) uniform UBO
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter SHRINK "Horizontal scale"                    0.0 0.0 1.0 0.01
 #pragma parameter SNR "Noise intensity"                        1.0 0.0 2.0 0.1
+#pragma parameter COLOUR_BLEEDING "Colour bleeding intensity"  0.0 0.0 3.0 0.1
 
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
@@ -115,7 +125,7 @@ vec2 magnify(in vec2 uv, in vec2 res)
     return (saturateA(fract(uv) / saturateA(fwidth(uv))) + floor(uv) - 0.5) / res.xy;
 }
 
-vec4 textureVertical(in vec2 uv){
+vec4 textureAABlur(in vec2 uv){
     vec2 texSize = vec2(textureSize(Source, 0));
     uv = magnify(uv,texSize.xy);
     uv = uv*texSize.xy + 0.5;
@@ -143,8 +153,8 @@ vec4 textureVertical(in vec2 uv){
     }
 }
 
-vec4 textureCRT(in vec2 uvr, in vec2 uvg, in vec2 uvb ){
-    return vec4(textureVertical(uvr).r,textureVertical(uvg).g, textureVertical(uvb).b, 255);
+vec4 textureSubpixelScaling(in vec2 uvr, in vec2 uvg, in vec2 uvb ){
+    return vec4(textureAABlur(uvr).r, textureAABlur(uvg).g, textureAABlur(uvb).b, 255);
 }
 
 float GetFuv(in vec2 uv){
@@ -155,14 +165,6 @@ float GetFuv(in vec2 uv){
     return abs((fuv*fuv*fuv*(fuv*(fuv*6.0-15.0)+10.0)).y - 0.5);
 }
 
-vec2 GetIuv(in vec2 uv){
-    vec2 texSize = vec2(textureSize(Source, 0));
-    uv = uv*texSize.xy;
-
-    vec2 iuv = floor(uv);
-    return iuv;
-}
-
 vec4 AddNoise(in vec4 col, in vec2 coord){
     /* Add some subpixel noise which simulates small CRT color variations */
     float iGlobalTime = float(params.FrameCount)*0.025;
@@ -170,20 +172,20 @@ vec4 AddNoise(in vec4 col, in vec2 coord){
     return clamp(col + gold_noise(coord,sin(iGlobalTime)) * snr - snr/2.0,0.0,1.0);
 }
 
-vec4 AddScanlines(in vec4 col, in vec2 coord){
+vec4 AddScanlines(in vec4 col, in vec2 uvr, in vec2 uvg, in vec2 uvb){
     /* Add scanlines which are wider for dark colors.
        You cannot see scanlines if color is bright. */
     vec2 texSize = vec2(textureSize(Source, 0));
     float brightness = 1.0 / params.BRIGHTNESS * 0.05; 
     float scale = (params.OutputSize.y / texSize.y) * 0.5;
     float dim = brightness * scale;
-    col.rgb -= dim * (abs(1.5* (1.0 - col.rgb) * abs(abs(GetFuv(coord) - 0.5))));
+    col.rgb -= dim * (abs(1.5* (1.0 - col.rgb) * abs(abs(vec3(GetFuv(uvr), GetFuv(uvg), GetFuv(uvb)) - 0.5))));
     return col;
 }
 
 vec3 XCoords(in float coord, in float factor){
     float iGlobalTime = float(params.FrameCount)*0.025;
-    float spread = 0.333;
+    float spread = 0.333 + params.COLOUR_BLEEDING;;
     vec3 coords = vec3(coord);
     if(params.BGR_LCD_PATTERN == 1.0)
         coords.r += spread * 2.0;
@@ -249,8 +251,8 @@ void main()
     vec2 coord_g = vec2(xCoords.g, yCoord) / texSize.xy;
     vec2 coord_b = vec2(xCoords.b, yCoord) / texSize.xy;
 
-    FragColor = textureCRT(coord_r,coord_g,coord_b);
+    FragColor = textureSubpixelScaling(coord_r,coord_g,coord_b);
     FragColor = AddNoise(FragColor, fragCoord);
-    FragColor = AddScanlines(FragColor, coord_r);
+    FragColor = AddScanlines(FragColor, coord_r, coord_g, coord_b);
     FragColor.a = 1.0;
 }
