@@ -7,6 +7,10 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.43, 07.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - fix scanline calculation so scanline will be dimmed from top and bottom
+ *
  * version 0.42, 03.05.2023
  * ---------------------------------------------------------------------------------------
  * - add colour bleeding parameter
@@ -242,7 +246,7 @@ vec4 AddScanlines(in vec4 col, in vec2 uvr, in vec2 uvg, in vec2 uvb){
     COMPAT_PRECISION float brightness = 1.0 / BRIGHTNESS * 0.05; 
     COMPAT_PRECISION float scale = (OutputSize.y / TextureSize.y) * 0.5;
     COMPAT_PRECISION float dim = brightness * scale;
-    col.rgb -= dim * (abs(1.5* (1.0 - col.rgb) * abs(abs(vec3(GetFuv(uvr), GetFuv(uvg), GetFuv(uvb)) - 0.5))));
+    col.rgb -= dim * (abs(1.5 * (1.0 - col.rgb) * (0.5 - vec3(GetFuv(uvr), GetFuv(uvg), GetFuv(uvb)))));
     return col;
 }
 
