@@ -20,7 +20,10 @@ This libretro shader tries to mimic crt behaviour without extensive use of scanl
 #### Scanlines
 ![scanlines](https://user-images.githubusercontent.com/6412699/233806373-d1eb7ba1-576f-498f-a54e-336f1a3f8ae8.png)
 ![240p test suite - 2](https://user-images.githubusercontent.com/6412699/233807008-cbbd909a-49a7-45f0-b064-e87ed55ed568.PNG)
+![Scanlines](https://user-images.githubusercontent.com/6412699/236659972-74838e94-0373-47fe-8ad2-4cf7dc91f3ba.PNG)
 
+#### Horizontal Blur
+![colour bleeding](https://user-images.githubusercontent.com/6412699/236660017-26682414-3ea2-4dee-ba20-a6f3d26070b6.png)
 
 ## Variants
 # gizmo-crt.glslp
