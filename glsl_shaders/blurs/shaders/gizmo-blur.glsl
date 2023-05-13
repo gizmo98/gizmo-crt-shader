@@ -140,13 +140,13 @@ vec4 textureAABlur(in vec2 uv){
     COMPAT_PRECISION vec2 fuv = uv - iuv;    
     if (HORIZONTAL_BLUR == 1.0){
         vec2 uv1 = vec2(uv + vec2(-0.5,-0.5)) / TextureSize.xy;
-        vec2 uv2 = vec2(uv + vec2(-0.5 + BLUR_OFFSET,-0.5)) / TextureSize.xy;
+        vec2 uv2 = vec2(uv + vec2(-0.5 - BLUR_OFFSET,-0.5)) / TextureSize.xy;
         vec4 col1 = COMPAT_TEXTURE( Texture, uv1 );
         vec4 col2 = COMPAT_TEXTURE( Texture, uv2 );
         vec4 col = (col1 + col2) / vec4(2.0);
         if (VERTICAL_BLUR == 1.0){
-            vec2 uv3 = vec2(uv + vec2(-0.5,-0.5 +BLUR_OFFSET)) / TextureSize.xy;
-            vec2 uv4 = vec2(uv + vec2(-0.5 + BLUR_OFFSET,-0.5 +BLUR_OFFSET)) / TextureSize.xy;
+            vec2 uv3 = vec2(uv + vec2(-0.5,-0.5 - BLUR_OFFSET)) / TextureSize.xy;
+            vec2 uv4 = vec2(uv + vec2(-0.5 + BLUR_OFFSET,-0.5 - BLUR_OFFSET)) / TextureSize.xy;
             vec4 col3 = COMPAT_TEXTURE( Texture, uv3 );
             vec4 col4 = COMPAT_TEXTURE( Texture, uv4 );
             col = (((col3 + col4) / vec4(2.0)) + col) / vec4(2.0);
@@ -164,8 +164,8 @@ vec4 textureSubpixelScaling(in vec2 uvr, in vec2 uvg, in vec2 uvb){
 }
 
 vec3 XCoords(in float coord, in float factor){
-    COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    COMPAT_PRECISION float spread = 0.333 + COLOUR_BLEEDING;
+    COMPAT_PRECISION float iGlobalTime = float(FrameCount) * 0.025;
+    COMPAT_PRECISION float spread = 1.0 / 3.0 + COLOUR_BLEEDING;
     COMPAT_PRECISION vec3 coords = vec3(coord);
     if(BGR_LCD_PATTERN == 1.0)
         coords.r += spread * 2.0;
