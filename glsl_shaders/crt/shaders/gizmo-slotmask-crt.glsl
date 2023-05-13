@@ -25,6 +25,7 @@
  * SNR noise intensity 
  * COLOUR_BLEEDING colour bleeding intensity
  * GRID slotmask intensity
+ * SLOTMASK switch between slotmask (1) and aperture grille (0)
  *
  * uses parts curvator of CRT-PI shader from davej https://github.com/libretro/glsl-shaders/blob/master/crt/shaders/crt-pi.glsl
  * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
