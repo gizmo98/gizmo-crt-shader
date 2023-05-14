@@ -7,6 +7,11 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
+ * version 0.2, 14.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - fix blur direction. Blend a fraction of left pixel in current pixel like a electron beam wuld do  
+ * - allow negative BLUR_OFFSET so blur in other direction can be used as well
+ *
  * version 0.1, 03.05.2023
  * ---------------------------------------------------------------------------------------
  * - initial commit 
@@ -25,7 +30,7 @@
 
 #pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
-#pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
+#pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 -1.0 1.0 0.05
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter COLOUR_BLEEDING "Colour bleeding intesnisty" 0.0 0.0 1.0 0.1
 

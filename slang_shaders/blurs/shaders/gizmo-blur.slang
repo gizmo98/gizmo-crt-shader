@@ -45,7 +45,7 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
-#pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 0.0 1.0 0.05
+#pragma parameter BLUR_OFFSET "Blur Intensity"                 0.5 -1.0 1.0 0.05
 #pragma parameter SUBPIXEL_SCALING "Subpixel scaling"          0.0 0.0 1.0 1.0
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter COLOUR_BLEEDING "Colour bleeding intensity"  0.0 0.0 3.0 0.1
