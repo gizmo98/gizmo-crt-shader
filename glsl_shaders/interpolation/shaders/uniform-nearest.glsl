@@ -102,12 +102,6 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 #endif
 
-float Y(in float X)
-{
-    return 4.0 * (-X * X + X);
-}
-
-
 vec2 saturateA(in vec2 x)
 {
     return clamp(x, 0.0, 1.0);
