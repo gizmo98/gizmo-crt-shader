@@ -183,19 +183,32 @@ vec4 ColorDepthReduction(vec4 col)
 
 vec4 EGAPalette(vec4 col)
 {    
-    vec3 c = col.rgb * 4.0;
+    float divider = 3.0;
+    vec3 c = floor(col.rgb * divider) + step(0.5, fract(col.rgb * divider));
     if (c.rgb == vec3(0.0,0.0,0.0) ||
         c.rgb == vec3(1.0,1.0,1.0) || 
         c.rgb == vec3(2.0,2.0,2.0) ||
         c.rgb == vec3(3.0,3.0,3.0) ||
         c.rgb == vec3(2.0,1.0,0.0))
         col.rgb = col.rgb;
-    else if (c.rgb == vec3(2.0,2.0,0.0))
-        col.rgb = vec3(2.0,1.0,0.0);
-    else if (c.r == 0.0 || c.g == 0.0 || c.b == 0.0)
-        col.rgb = step(1.0,col.rgb) * 2.0;
-    else if (c.r == 3.0 || c.g == 3.0 || c.b == 3.0)
-        col.rgb = 1.0 + step(3.0,col.rgb) * 2.0;
+    else if (c.r == 3.0 && c.g == 3.0 && c.b == 2.0 )
+        col.rgb = vec3(3.0,3.0,1.0) / divider;
+    else if (c.r == 2.0 && c.g >= 2.0 && c.b == 3.0  )
+        col.rgb = vec3(1.0,3.0,3.0) / divider;       
+    else if (c.rgb == vec3(2.0,2.0,0.0) || c.rgb == vec3(2.0,0.0,0.0))
+        col.rgb = vec3(2.0,1.0,0.0) / divider;
+    else if (c.r == 0.0)
+        col.gb = step(2.0,c.gb) * 2.0 / divider;
+    else if (c.g == 0.0)
+        col.rb = step(2.0,c.rb) * 2.0 / divider;
+    else if (c.b == 0.0)
+        col.rg = step(2.0,c.rg) * 2.0 / divider;
+    else if (c.r == 3.0)
+        col.gb = step(1.0,c.gb) / divider;
+    else if (c.g == 3.0)
+        col.rb = step(1.0,c.rb) / divider;
+    else if (c.b == 3.0)
+        col.rg = step(1.0,c.rg) / divider;
     return col;
 }
 
