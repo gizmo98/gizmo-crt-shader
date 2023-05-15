@@ -16,7 +16,6 @@
  * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
  */
 
-#pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter COLOR_DEPTH "Color depth in Bits"            1.0 1.0 8.0 1.0
 #pragma parameter DITHER_TUNE "Tune dithering"                 0.0 -64.0 64.0 1.0
 #pragma parameter EGA_PALETTE "EGA palette"                    0.0 0.0 1.0 1.0
@@ -53,12 +52,10 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 uniform COMPAT_PRECISION float COLOR_DEPTH;
 uniform COMPAT_PRECISION float DITHER_TUNE;
 uniform COMPAT_PRECISION float EGA_PALETTE;
 #else
-#define BGR_LCD_PATTERN 0.0
 #define COLOR_DEPTH 7.0
 #define DITHER_TUNE 0.0
 #define EGA_PALETTE 0.0
@@ -102,7 +99,6 @@ uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 uniform COMPAT_PRECISION float COLOR_DEPTH;
 uniform COMPAT_PRECISION float DITHER_TUNE;
 uniform COMPAT_PRECISION float EGA_PALETTE;
@@ -151,27 +147,6 @@ vec4 textureAA(in vec2 uv){
     return col;
 }
 
-vec4 textureSubSample(in vec2 uvr, in vec2 uvg, in vec2 uvb ){
-    return vec4(textureAA(uvr).r,textureAA(uvg).g, textureAA(uvb).b, 255);
-}
-
-vec3 XCoords(in float coord, in float factor){
-    COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    COMPAT_PRECISION float spread = 0.333;
-    COMPAT_PRECISION vec3 coords = vec3(coord);
-    if(BGR_LCD_PATTERN == 1.0)
-        coords.r += spread * 2.0;
-    else
-        coords.b += spread * 2.0;
-    coords.g += spread;
-    coords *= factor;
-    return coords;
-}
-
-float YCoord(in float coord, in float factor){
-    return coord * factor;
-}
-
 vec4 ColorDepthReduction(vec4 col)
 {
     float divider = pow(2.0,COLOR_DEPTH) - 1.0; 
@@ -191,12 +166,82 @@ vec4 EGAPalette(vec4 col)
         c.rgb == vec3(3.0,3.0,3.0) ||
         c.rgb == vec3(2.0,1.0,0.0))
         col.rgb = col.rgb;
-    else if (c.r == 3.0 && c.g == 3.0 && c.b == 2.0 )
-        col.rgb = vec3(3.0,3.0,1.0) / divider;
-    else if (c.r == 2.0 && c.g >= 2.0 && c.b == 3.0  )
-        col.rgb = vec3(1.0,3.0,3.0) / divider;       
-    else if (c.rgb == vec3(2.0,2.0,0.0) || c.rgb == vec3(2.0,0.0,0.0))
-        col.rgb = vec3(2.0,1.0,0.0) / divider;
+    // bright green
+    else if (c.rgb == vec3(0.0,3.0,0.0)||
+             c.rgb == vec3(0.0,3.0,2.0)||
+             c.rgb == vec3(2.0,3.0,0.0)||
+             c.rgb == vec3(0.0,3.0,1.0)||
+             c.rgb == vec3(1.0,3.0,1.0)||
+             c.rgb == vec3(1.0,3.0,0.0)||
+             c.rgb == vec3(2.0,3.0,1.0)||
+             c.rgb == vec3(2.0,3.0,2.0))
+        col.rgb = vec3(1.0,3.0,1.0) / divider;
+    // green  
+    else if (c.rgb == vec3(0.0,2.0,0.0)||
+             c.rgb == vec3(0.0,2.0,1.0)||
+             c.rgb == vec3(0.0,1.0,0.0)||
+             c.rgb == vec3(0.0,1.0,1.0)||
+             c.rgb == vec3(1.0,2.0,1.0)||
+             c.rgb == vec3(1.0,2.0,0.0)||
+             c.rgb == vec3(0.0,1.0,1.0))
+        col.rgb = vec3(0.0,2.0,0.0) / divider; 
+    // bright red
+    else if (c.rgb == vec3(3.0,0.0,0.0)||
+             c.rgb == vec3(3.0,0.0,1.0)||
+             c.rgb == vec3(3.0,1.0,0.0)||
+             c.rgb == vec3(3.0,1.0,1.0))
+        col.rgb = vec3(3.0,1.0,1.0) / divider;
+    // red  
+    else if (c.rgb == vec3(2.0,0.0,0.0)||
+             c.rgb == vec3(2.0,0.0,1.0)||
+             c.rgb == vec3(1.0,0.0,0.0))
+        col.rgb = vec3(2.0,0.0,0.0) / divider; 
+    // bright cyan
+    else if (c.rgb == vec3(0.0,3.0,3.0)||
+             c.rgb == vec3(1.0,3.0,3.0)||
+             c.rgb == vec3(2.0,3.0,3.0))
+        col.rgb = vec3(1.0,3.0,3.0) / divider;
+    // cyan
+    else if (c.rgb == vec3(0.0,2.0,2.0)||
+             c.rgb == vec3(1.0,2.0,2.0))
+        col.rgb = vec3(0.0,2.0,2.0) / divider;
+    // bright blue
+    else if (c.rgb == vec3(0.0,2.0,3.0)||
+             c.rgb == vec3(1.0,2.0,3.0)||
+             c.rgb == vec3(0.0,0.0,3.0))
+        col.rgb = vec3(1.0,1.0,3.0) / divider;
+    // blue  
+    else if (c.rgb == vec3(0.0,0.0,2.0)||
+             c.rgb == vec3(0.0,0.0,1.0)||
+             c.rgb == vec3(0.0,1.0,2.0)||
+             c.rgb == vec3(1.0,1.0,3.0)||
+             c.rgb == vec3(0.0,1.0,3.0))
+        col.rgb = vec3(0.0,0.0,2.0) / divider; 
+    // brown  
+    else if (c.rgb == vec3(2.0,1.0,0.0)||
+             c.rgb == vec3(2.0,1.0,1.0)||
+             c.rgb == vec3(1.0,1.0,0.0))
+        col.rgb = vec3(2.0,1.0,0.0) / divider; 
+    // bright yellow  
+    else if (c.rgb == vec3(3.0,3.0,0.0)||
+             c.rgb == vec3(3.0,3.0,1.0)||
+             c.rgb == vec3(3.0,3.0,2.0)||
+             c.rgb == vec3(2.0,2.0,0.0)||
+             c.rgb == vec3(2.0,2.0,1.0))
+        col.rgb = vec3(3.0,3.0,1.0) / divider; 
+    // magenta  
+    else if (c.rgb == vec3(2.0,0.0,2.0)||
+             c.rgb == vec3(2.0,0.0,3.0)||
+             c.rgb == vec3(2.0,1.0,2.0)||
+             c.rgb == vec3(2.0,1.0,3.0))
+        col.rgb = vec3(2.0,0.0,2.0) / divider;     
+    // bright magenta  
+    else if (c.rgb == vec3(3.0,0.0,2.0)||
+             c.rgb == vec3(3.0,0.0,3.0)||
+             c.rgb == vec3(3.0,2.0,3.0)||
+             c.rgb == vec3(3.0,1.0,3.0)||
+             c.rgb == vec3(3.0,1.0,2.0))
+        col.rgb = vec3(3.0,1.0,3.0) / divider; 
     else if (c.r == 0.0)
         col.gb = step(2.0,c.gb) * 2.0 / divider;
     else if (c.g == 0.0)
@@ -215,17 +260,7 @@ vec4 EGAPalette(vec4 col)
 void main()
 {
     vec2 texcoord = TEX0.xy;
-    
-    COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
-    COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
-    COMPAT_PRECISION float yCoord = YCoord(fragCoord.y, factor.y) ;
-    COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, factor.x);
-
-    COMPAT_PRECISION vec2 coord_r = vec2(xCoords.r, yCoord) / TextureSize.xy;
-    COMPAT_PRECISION vec2 coord_g = vec2(xCoords.g, yCoord) / TextureSize.xy;
-    COMPAT_PRECISION vec2 coord_b = vec2(xCoords.b, yCoord) / TextureSize.xy;
-
-    FragColor = textureAA(coord_r);
+    FragColor = textureAA(texcoord);
     FragColor = ColorDepthReduction(FragColor);
     if (EGA_PALETTE == 1.0)
         FragColor = EGAPalette(FragColor);
