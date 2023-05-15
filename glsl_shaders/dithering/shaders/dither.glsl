@@ -190,6 +190,8 @@ vec4 EGAPalette(vec4 col)
         c.rgb == vec3(3.0,3.0,3.0) ||
         c.rgb == vec3(2.0,1.0,0.0))
         col.rgb = col.rgb;
+    else if (c.rgb == vec3(2.0,2.0,0.0))
+        col.rgb = vec3(2.0,1.0,0.0);
     else if (c.r == 0.0 || c.g == 0.0 || c.b == 0.0)
         col.rgb = step(1.0,col.rgb) * 2.0;
     else if (c.r == 3.0 || c.g == 3.0 || c.b == 3.0)
