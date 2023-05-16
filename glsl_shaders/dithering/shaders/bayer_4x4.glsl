@@ -1,5 +1,5 @@
 /* 
- * gizmo98 color reduction shader
+ * gizmo98 bayer 4x4 dithering shader
  * Copyright (C) 2023 gizmo98
  *
  *   This program is free software; you can redistribute it and/or modify it
@@ -7,7 +7,7 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
- * version 0.1, 28.04.2023
+ * version 0.1, 16.05.2023
  * ---------------------------------------------------------------------------------------
  * - initial commit
  * 
