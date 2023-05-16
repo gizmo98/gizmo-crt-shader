@@ -16,7 +16,7 @@
  * uses parts of texture anti-aliasing shader from Ikaros https://www.shadertoy.com/view/ldsSRX
  */
 
-#pragma parameter COLOR_DEPTH "Color depth in Bits"            1.0 1.0 8.0 1.0
+#pragma parameter COLOR_DEPTH "Color depth in Bits"            2.0 1.0 8.0 1.0
 #pragma parameter DITHER_TUNE "Tune dithering"                 0.0 -64.0 64.0 1.0
 #pragma parameter EGA_PALETTE "EGA palette"                    0.0 0.0 1.0 1.0
 
