@@ -120,7 +120,7 @@ vec4 textureAA(in vec2 uv){
     if (params.MONOCHROME == 1.0)
         col.rgb = vec3(col.r + col.g + col.b) / 3.0;
     
-    //col = DitherPattern(col , ist + 0.5);
+    col = DitherPattern(col , ist + 0.5);
     return col;
 }
 
