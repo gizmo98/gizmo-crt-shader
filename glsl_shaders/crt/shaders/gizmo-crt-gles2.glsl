@@ -1,5 +1,5 @@
 /* 
- * gizmo98 slotmask crt shader
+ * gizmo98 crt shader
  * Copyright (C) 2023 gizmo98
  *
  *   This program is free software; you can redistribute it and/or modify it
@@ -7,18 +7,52 @@
  *   Software Foundation; either version 2 of the License, or (at your option)
  *   any later version.
  *
- * version 0.2, 16.08.2023
+ * version 0.6, 16.08.2023
  * ---------------------------------------------------------------------------------------
  * - add gles2 version which uses sharp bilinear instead of texture aa shader
- * - add vertical JITTER option
  *
- * version 0.1, 10.05.2023
+ * version 0.44, 10.05.2023
  * ---------------------------------------------------------------------------------------
- * - initial commit
+ * - change blur direction from left to right like 
+ * - fix textureSubpixelScaling alpha value
+ * 
+ * version 0.43, 07.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - fix scanline calculation so scanline will be dimmed from top and bottom
+ *
+ * version 0.42, 03.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - add colour bleeding parameter
+ * - add rgb coord dependent scanline function
+ * - remove not used interlacing function
+ * - give texture functions better names 
+ *
+ * version 0.41, 01.05.2023
+ * ---------------------------------------------------------------------------------------
+ * - add more references for used sources 
+ *
+ * version 0.40, 29.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - fix aspect ratio issue 
+ * - fix screen centering issue
+ * - use CRT/PI curvator
+ * - add noise intensity value
+ *
+ * version 0.35, 29.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - initial slang port
+ * - remove NTSC and INTERLACE effects
+ * 
+ * version 0.3, 28.04.2023
+ * ---------------------------------------------------------------------------------------
+ * - unify shader in one file
+ * - replace fixed macros and defines with pragmas
+ * - add BLUR_OFFSET setting. This setting can be used to set the strength of a bad signal
+ * - add ANAMORPH setting for megadrive and snes
  * 
  * https://github.com/gizmo98/gizmo-crt-shader
  *
- * This shader tries to mimic a CRT without extensive use of scanlines and masks and rgb pattern emulation.
+ * This shader tries to mimic a CRT without extensive use of scanlines and rgb pattern emulation.
  * It uses horizontal subpixel scaling and adds brightness dependent scanline patterns and allows 
  * fractional scaling. 
  *
@@ -29,16 +63,14 @@
  * SHRINK scale screen in X direction
  * SNR noise intensity 
  * COLOUR_BLEEDING colour bleeding intensity
- * GRID slotmask intensity
- * SLOTMASK switch between slotmask (1) and aperture grille (0)
  *
  * uses parts curvator of CRT-PI shader from davej https://github.com/libretro/glsl-shaders/blob/master/crt/shaders/crt-pi.glsl
  * uses sharp bilinear shader
  * uses gold noise shader from dcerisano https://www.shadertoy.com/view/ltB3zD
  */
 
-#pragma parameter CURVATURE_X "Screen curvature - horizontal"  0.10 0.0 1.0 0.01
-#pragma parameter CURVATURE_Y "Screen curvature - vertical"    0.15 0.0 1.0 0.01
+#pragma parameter CURVATURE_X "Screen curvature - horizontal"  0.10 0.0 1.0  0.01
+#pragma parameter CURVATURE_Y "Screen curvature - vertical"    0.15 0.0 1.0  0.01
 #pragma parameter BRIGHTNESS "Scanline Intensity"              0.5 0.05 1.0 0.05
 #pragma parameter HORIZONTAL_BLUR "Horizontal Blur"            0.0 0.0 1.0 1.0
 #pragma parameter VERTICAL_BLUR "Vertical Blur"                0.0 0.0 1.0 1.0
@@ -46,10 +78,7 @@
 #pragma parameter BGR_LCD_PATTERN "BGR output pattern"         0.0 0.0 1.0 1.0
 #pragma parameter SHRINK "Horizontal scale"                    0.0 0.0 1.0 0.01
 #pragma parameter SNR "Noise intensity"                        1.0 0.0 3.0 0.1
-#pragma parameter COLOUR_BLEEDING "Colour bleeding intensity"  0.0 0.0 3.0 0.05
-#pragma parameter GRID "Grid intensity"                        0.0 0.0 3.0 0.05
-#pragma parameter SLOTMASK "Use slot mask"                     0.0 0.0 1.0 1.0
-#pragma parameter JITTER "Add vertical jitter"                 0.0 0.0 1.0 1.0
+#pragma parameter COLOUR_BLEEDING "Colour bleeding intensity"  0.0 0.0 3.0 0.1
 
 #if defined(VERTEX)
 
@@ -94,9 +123,6 @@ uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 uniform COMPAT_PRECISION float SHRINK;
 uniform COMPAT_PRECISION float SNR;
 uniform COMPAT_PRECISION float COLOUR_BLEEDING;
-uniform COMPAT_PRECISION float GRID;
-uniform COMPAT_PRECISION float SLOTMASK;
-uniform COMPAT_PRECISION float JITTER;
 #else
 #define CURVATURE_X 0.1
 #define CURVATURE_Y 0.15
@@ -108,9 +134,6 @@ uniform COMPAT_PRECISION float JITTER;
 #define SHRINK 0.0
 #define SNR 1.0
 #define COLOUR_BLEEDING 0.0
-#define GRID 0.0
-#define SLOTMASK 1.0
-#define JITTER 1.0
 #endif
 
 void main()
@@ -163,9 +186,6 @@ uniform COMPAT_PRECISION float BGR_LCD_PATTERN;
 uniform COMPAT_PRECISION float SHRINK;
 uniform COMPAT_PRECISION float SNR;
 uniform COMPAT_PRECISION float COLOUR_BLEEDING;
-uniform COMPAT_PRECISION float GRID;
-uniform COMPAT_PRECISION float SLOTMASK;
-uniform COMPAT_PRECISION float JITTER;
 #endif
 
 float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio
@@ -207,7 +227,6 @@ vec4 textureAABlur(in vec2 uv){
 }
 
 vec4 textureSubpixelScaling(in vec2 uvr, in vec2 uvg, in vec2 uvb){
-
     return vec4(textureAABlur(uvr).r,textureAABlur(uvg).g, textureAABlur(uvb).b, 1.0);
 }
 
@@ -215,7 +234,6 @@ float GetFuv(in vec2 uv){
     uv = uv*TextureSize.xy + 0.5;
     COMPAT_PRECISION vec2 iuv = floor(uv);
     COMPAT_PRECISION vec2 fuv = uv - iuv;
-    //return abs(fuv.y - 0.5);
     return abs((fuv*fuv*fuv*(fuv*(fuv*6.0-15.0)+10.0)).y - 0.5);
 }
 
@@ -229,32 +247,16 @@ vec4 AddNoise(in vec4 col, in vec2 coord){
 vec4 AddScanlines(in vec4 col, in vec2 uvr, in vec2 uvg, in vec2 uvb){
     /* Add scanlines which are wider for dark colors.
        You cannot see scanlines if color is bright. */
-    COMPAT_PRECISION float brightness = 0.1 / BRIGHTNESS; 
-    COMPAT_PRECISION float scale = (OutputSize.y / TextureSize.y) * 0.25;
+    COMPAT_PRECISION float brightness = 1.0 / BRIGHTNESS * 0.05; 
+    COMPAT_PRECISION float scale = (OutputSize.y / TextureSize.y) * 0.5;
     COMPAT_PRECISION float dim = brightness * scale;
-    col.rgb -= dim * (abs((1.0 - 0.5 * col.rgb) * (1.0 - vec3(GetFuv(uvr), GetFuv(uvg), GetFuv(uvb))))) ;
-    return col;
-}
-
-vec4 AddGrid(in vec4 col, in vec2 coord){
-    COMPAT_PRECISION float scale = (OutputSize.x / TextureSize.y) * 0.25;
-    if (mod(floor((coord.x) * 1.0) ,3.0) == 0.0){
-        col = mix(col,vec4(0.0,0.0,0.0,0.5 * scale),GRID);
-    }
-    else{
-        if (SLOTMASK == 1.0){
-            float field = fract (coord.x / 6.0);
-            if(((field >= 0.166 && field <= 0.5) && (mod(floor(coord.y * 1.0 + 1.0),3.0) == 0.0)) ||
-               ((field >= 0.666 && field <= 1.0) && (mod(floor(coord.y * 1.0),3.0) == 0.0)))
-               col = mix(col,vec4(0.0,0.0,0.0,0.5 * scale),GRID*0.3);
-        }
-    }
+    col.rgb -= dim * (abs(1.5 * (1.0 - col.rgb) * (0.5 - vec3(GetFuv(uvr), GetFuv(uvg), GetFuv(uvb)))));
     return col;
 }
 
 vec3 XCoords(in float coord, in float factor){
     COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    COMPAT_PRECISION float spread = 0.333 + COLOUR_BLEEDING;
+    COMPAT_PRECISION float spread = 1.0 / 3.0 + COLOUR_BLEEDING;
     COMPAT_PRECISION vec3 coords = vec3(coord);
     if(BGR_LCD_PATTERN == 1.0)
         coords.r += spread * 2.0;
@@ -290,40 +292,25 @@ vec2 Distort(vec2 coord)
     return coord;
 }
 
-vec2 Jitter(vec2 coord)
-{
-    COMPAT_PRECISION float iGlobalTime = float(FrameCount)*0.025;
-    coord.y += sin(iGlobalTime * 220.1) * 0.10;
-    return coord;
-}
-
 void main()
 {
     vec2 texcoord = TEX0.xy;
 
     if (SHRINK > 0.0)
     {
-        texcoord.x *= TextureSize.x;
         texcoord.x -= 0.5;
-        texcoord.x *= 1.0 - SHRINK;
+        texcoord.x *= 1.0 + SHRINK;
         texcoord.x += 0.5; 
-        texcoord.x /= TextureSize.x;
     }
 
     texcoord = Distort(texcoord);
-    if (texcoord.x < 0.0){
-	gl_FragColor = vec4(0.0);
+	if (texcoord.x < 0.0){
+		gl_FragColor = vec4(0.0);
         return;
     }
     
     COMPAT_PRECISION vec2 fragCoord = texcoord.xy * OutputSize.xy;
     COMPAT_PRECISION vec2 factor = TextureSize.xy / OutputSize.xy ;
-
-    if (JITTER > 0.0)
-    {
-        fragCoord = Jitter(fragCoord);
-    }    
-
     COMPAT_PRECISION float yCoord = YCoord(fragCoord.y, factor.y) ;
     COMPAT_PRECISION vec3  xCoords = XCoords(fragCoord.x, factor.x);
 
@@ -334,6 +321,5 @@ void main()
     FragColor = textureSubpixelScaling(coord_r,coord_g,coord_b);
     FragColor = AddNoise(FragColor, fragCoord);
     FragColor = AddScanlines(FragColor, coord_r, coord_g, coord_b);
-    FragColor = AddGrid(FragColor, gl_FragCoord.xy /*TEX0.xy * OutputSize.xy*/ );    
 }
 #endif
